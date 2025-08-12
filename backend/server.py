@@ -1,16 +1,25 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-
-from http.server import BaseHTTPRequestHandler, HTTPServer
+import os
+from envs import env
+import psycopg2
+import argparse
 
 app = Flask(__name__)
 CORS(app)
 
 hostName = "localhost"
 
+db_conn_str = "dbname={DB_NAME} user={DB_USER}"
+
+conn = psycopg2.connect(db_conn_str)
+curs = conn.cursor()
+
 @app.route("/register", methods=["POST"])
 def registerUser():
     data = request.get_json()
+    
+    print(env('DB_PASSWORD'))
     
     try:
         username = data["username"]
