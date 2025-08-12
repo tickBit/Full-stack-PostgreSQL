@@ -1,17 +1,36 @@
+from flask import Flask, request, jsonify
+from flask_cors import CORS
+
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import time
+
+app = Flask(__name__)
+CORS(app)
 
 hostName = "localhost"
-serverPort = 8080
 
-if __name__ == "__main__":        
-    webServer = HTTPServer((hostName, serverPort), HTTPServer)
-    print("Server started http://%s:%s" % (hostName, serverPort))
-
+@app.route("/register", methods=["POST"])
+def registerUser():
+    data = request.get_json()
+    
     try:
-        webServer.serve_forever()
-    except KeyboardInterrupt:
-        pass
+        username = data["username"]
+        password = data["password"]
+    except:
+        return jsonify({'success': False}), 401
+    
+    return f"{username} {password}"
 
-    webServer.server_close()
-    print("Server stopped.")
+@app.route("/login", methods=["POST"])
+def loginUser():
+    data = request.get_json()
+    
+    try:
+        username = data["username"]
+        password = data["password"]
+    except:
+        return jsonify({f"success": False}), 401
+    
+    return f"{username} {password}"
+
+if __name__ == '__main__':
+    app.run(debug=True)
