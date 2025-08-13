@@ -5,7 +5,7 @@ from dotenv import load_dotenv, dotenv_values
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from functools import wraps
-import werkzeug.exceptions
+import hashlib
 
 app = Flask(__name__)
     
@@ -77,17 +77,20 @@ def mainpage():
 @app.route("/register", methods=["POST"])
 def registerUser():
     data = request.get_json()
-        
+    
+    m = hashlib.sha512()
+    secret_key = u'TOP_SECRET_KEY_FOR_MY_YOUR_AND_EVERYONES_EYES_ONLY'
+    
     try:
         username = data["username"]
         email = data["email"]
-        password = data["password"]
+        password = hashlib.sha512((secret_key + data["password"]).encode("UTF-8")).hexdigest()
     except:
         return jsonify({'success': False}), 401
     
     conn = connection()
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO users (username, email, password) VALUES ({username}, '{email}', {password})")
+    cur.execute(f"INSERT INTO users (username, email, password) VALUES ('{username}', '{email}', '{password}')")
     conn.commit()
     conn.close()
     
@@ -97,9 +100,12 @@ def registerUser():
 def loginUser():
     data = request.get_json()
     
+    m = hashlib.sha512()
+    secret_key = u'TOP_SECRET_KEY_FOR_MY_YOUR_AND_EVERYONES_EYES_ONLY'
+    
     try:
         username = data["username"]
-        password = data["password"]
+        password = hashlib.sha512((secret_key + data["password"]).encode("UTF-8")).hexdigest()
     except:
         return jsonify({f"success": False}), 401
 
