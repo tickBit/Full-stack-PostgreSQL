@@ -1,16 +1,27 @@
-from click import File
-from flask import Flask, request, jsonify, session, redirect, url_for
-from flask_cors import CORS
+import base64
+import datetime
+import jwt
+from flask import Flask, request, jsonify, session, make_response, Response
+from flask_cors import CORS, cross_origin
 import os
-from dotenv import load_dotenv, dotenv_values
+from dotenv import load_dotenv
 import psycopg2
 from psycopg2.extensions import ISOLATION_LEVEL_AUTOCOMMIT
 from functools import wraps
 import hashlib
 
+
 app = Flask(__name__)
-    
-CORS(app)
+# Salli Reactin pyyntö
+CORS(
+    app,
+    supports_credentials=True,
+    resources={r"/*": {"origins": "http://localhost:3000"}},
+    allow_headers=["Content-Type", "Authorization"]
+)
+
+app.secret_key = 'Secret_test_key_for_MY_AND_YOUR_EYES_ONLY'
+app.config['SESSION_TYPE'] = 'filesystem'
 
 hostName = "localhost"
 
@@ -59,32 +70,41 @@ def connection():
 #conn.commit()
 #conn.close()
 
-def auth(f):
-    
+def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
-        if not 'loggedin' in session:
-            return "User not logged in"
-        else:
-           return f(*args, **kwargs)
+        if request.method == "OPTIONS":
+            return f(*args, **kwargs)
+
+        token = None
+        auth_header = request.headers.get('Authorization')
+        if auth_header and auth_header.startswith("Bearer "):
+            token = auth_header.split(" ")[1]
+
+        if not token:
+            return jsonify({'error': 'token is missing'}), 403
+
+        try:
+            payload = jwt.decode(token, app.secret_key, algorithms=["HS256"])
+            user_id = payload.get("userid")
+            if not user_id:
+                return jsonify({'error': 'token missing userid'}), 403
+        except Exception as error:
+            print("JWT ERROR:", error)
+            return jsonify({'error': 'token is invalid/expired'}), 403
+
+        return f(user_id, *args, **kwargs)  # välitetään user_id seuraavaan funktioon
     return decorated
 
-@app.route("/", methods=["GET"])
-@auth
-def mainpage():
+
     
-
-    return jsonify({'success': True}), 200
-
 @app.route("/deleteme", methods=["GET"])
-@auth
-def deleteMe():
-
-    print(session["username"])
+@token_required
+def deleteMe(user_id):
     
     conn = connection()
     cur = conn.cursor()
-    cur.execute(f"DELETE FROM users WHERE username='{session["username"]}'")
+    cur.execute(f"DELETE FROM users WHERE (username={user_id})")
     conn.commit()
     conn.close()
     
@@ -131,47 +151,70 @@ def loginUser():
     user = tuple(cur.fetchone())
     conn.close()
     
-    if (username == user[1] and password == user[3]):
+    #if (username == user[1] and password == user[3]):
+    # 
+    session['loggedin'] = "True"
+    session['username'] = username
+        
+    token = jwt.encode({"userid": user[0]}, app.secret_key, algorithm="HS256")
+    return jsonify({'success': True, 'token': token})
     
-        session['loggedin'] = "True"
-        session['username'] = username
-        session['userId'] = int(user[0])
-        return jsonify({'success': True}), 200
-
-    # Wrong un and/or pw
-    return jsonify({'success': False}), 403
-
-@app.route("/logout", methods=["GET"])
-@auth
-def logout():
-    session.pop("loggedin", None)
-    session.pop('username', None)
-    
-    return jsonify({'success': True}), 200
+    #return make_response('Could not Verify', 401, {'WWW-Authenticate': 'Basic realm ="Login Required"'})
 
 @app.route("/upload", methods=["POST"])
-@auth
-def upload_file():
-    
-    if request.method == 'POST':
-        file = request.files['file']
-    if file:
-        with open("C:/users/marju/Pictures/Work of AI/Nallet/"+file.filename, "rb") as f:
-            binary_data = bytearray(f.read())
-        
-        description = request.form["description"]
-                
-        conn = connection()
-        cur = conn.cursor()
-        #cur.execute(f'INSERT INTO images VALUES ({int(session["userId"])}, "{description}", """{binary_data}""" )')
-        cur.execute("""INSERT INTO images (userId, description, file_data) VALUES (%s, %s, %s);""", (session["userId"], description, binary_data))
-        conn.commit()
-        conn.close()
-    return jsonify({'success': True}), 201
-    
-if __name__ == '__main__':
-    
-    app.secret_key = 'Secret_test_key_for_MY_AND_YOUR_EYES_ONLY'
-    app.config['SESSION_TYPE'] = 'filesystem'
+@token_required
+def upload_file(user_id):
+    file = request.files.get("file")
+    description = request.form.get("description")
 
+    if not file or not description:
+        return jsonify({"error": "Missing file or description"}), 400
+
+    binary_data = file.read()
+
+    conn = connection()
+    cur = conn.cursor()
+    cur.execute(
+        """INSERT INTO images (userId, description, file_data)
+           VALUES (%s, %s, %s)""",
+        (user_id, description, psycopg2.Binary(binary_data))
+    )
+    conn.commit()
+    conn.close()
+
+    return jsonify({'success': True}), 201
+
+
+@app.route("/getUserPics", methods=["GET"])
+@token_required
+def get_user_pics(user_id):
+    
+    conn = connection()
+    cur = conn.cursor()
+    
+    try:
+        cur.execute(f"""SELECT * FROM images WHERE userId={user_id}""")
+        data = tuple(cur.fetchall())
+    except:
+        pass
+    conn.close()
+
+    images = []
+    for row in data:
+        img_id = row[0]
+        description = row[1]
+        file_data = base64.b64encode(row[2]).decode("utf-8")  # memoryview → bytes → base64-string
+
+        images.append({
+            "id": img_id,
+            "description": description,
+            "file_data": file_data
+        })
+
+    if len(images) > 0:
+        return jsonify(images)
+    else:
+        return jsonify({'success': True})
+
+if __name__ == '__main__':
     app.run(debug=False)
