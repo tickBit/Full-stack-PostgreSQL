@@ -1,30 +1,25 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
+
 export const fetchPics = createAsyncThunk(
   'pic/fetchPics',
-  async (_, thunkAPI) => {
+  async (token, thunkAPI) => {
 
-    const token = localStorage.getItem("token");
-    
     try {
-      const response = await axios.get('http://localhost:5000/getUserPics',
-        {
+      const response = await axios.get('http://localhost:5000/getUserPics', {
         headers: {
-          "Authorization": `Bearer ${token}`,
-          "Content-Type": "multipart/form-data"
+        "Authorization": `Bearer ${token}`,
+        "Content-Type": "multipart/form-data"
         },
-        withCredentials: true
-        });
-
+      withCredentials: true
+    })
       return response.data;
-
-    } catch (error) {
-      console.log("ERRORI");
-      return thunkAPI.rejectWithValue(error.response.data);
     }
-  }
-);
+      catch (error) {
+        return thunkAPI.rejectWithValue(error.message);
+    }
+  })
 
 const picSlice = createSlice({
   name: 'pic',
@@ -46,26 +41,36 @@ const picSlice = createSlice({
             state.isUploaded = false
             state.message = ''
         },
+          deleteOne: (state, action) => {
+            state.pics = state.pics.filter(pic => pic.id !== action.payload)
+        },
+          uploadPic: (state, action) => {
+            state.pics.push(action.payload)
+        }
     },
   extraReducers: (builder) => {
     builder
       .addCase(fetchPics.pending, (state) => {
         state.isLoading = true;
         state.isError = false;
+        state.isSuccess = false;
         state.error = '';
       })
       .addCase(fetchPics.fulfilled, (state, action) => {
         state.isLoading = false;
+        state.isError = false;
+        state.isSuccess = true;
         state.pics = action.payload;
       })
       .addCase(fetchPics.rejected, (state, action) => {
         state.isLoading = false;
         state.isError = true;
+        state.isSuccess = false;
         state.error = action.payload || 'Failed to fetch pics';
         state.pics = [];
       });
   },
 });
 
-export const {reset} = picSlice.actions
+export const {reset, deleteOne, uploadPic } = picSlice.actions
 export default picSlice.reducer;

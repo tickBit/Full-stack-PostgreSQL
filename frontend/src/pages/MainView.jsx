@@ -12,39 +12,55 @@ function MainView() {
     const navigate = useNavigate();
     const dispatch = useDispatch();
 
-    const { isLoggedIn, username } = useAuth();
+    const { isLoggedIn, username, token } = useAuth();
 
-    const pics = useSelector((state) => state.pic.pics);
-    
+    const { pics } = useSelector((state) => state.pic);
     
     async function deletePic(e, id) {
+        if (!isLoggedIn) return;
 
-        if (!isLoggedIn || !pics) return;
-        else {
-            const response = await axios.delete(`http://localhost:5000/deletePic?id=${id}`);
-            console.log(response);
+        try {
+            const response = await axios.delete(`http://localhost:5000/deletePic/${id}`, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                }
+            });
+
+            if (response.data.success) {
+                // Poistetaan kuva Reduxin statesta
+                dispatch({
+                    type: 'pic/deleteOne',
+                    payload: id
+                });
+            } else {
+                console.error(response.data.message);
+            }
+        } catch (err) {
+            console.error(err);
         }
     }
 
 
+
     useEffect(() => {
 
-        if (localStorage.getItem("token")) {
+        if (isLoggedIn) {
 
-            dispatch(fetchPics());
-
-            navigate('/');
-            return;
+            dispatch(fetchPics(token));
         } else {
             navigate('/');
         }
 
-        dispatch(reset());
+        // this is done when component is unmounted
+        return () => {
+            dispatch(reset())
+        }
 
-    }, [isLoggedIn, navigate, dispatch, pics]);
+    }, [isLoggedIn, navigate, dispatch, token]);
 
     return (
         <div className="page">
+            
             {isLoggedIn ? (
                 <div>
                     <h2>Main page for user {username}</h2>
@@ -53,28 +69,31 @@ function MainView() {
 
                     <div className='picture-area'>
 
-                        {pics && pics.length > 0 ? (
-                                pics.map((picture) =>
+                    {pics ? (<div>
+
+                        {pics.length > 0 ? (
+                                pics.map((picture) => {
                     
-                                {
-                                        return <div className='picture' key={'_' + picture.id}>
+                                
+                                        return (<div className='picture' key={'_'+picture.id}>
                                             <p onClick={(e) => deletePic(e, picture.id)} className='close'>Delete picture</p>
                                             <img src={`data:image/jpeg;base64,${picture.file_data}`} width="350" height="350" alt={`Image: ${picture.fileName}`} />
                                             <p>{picture.description}</p>
-                                        </div>;
-                                    }
-                                ))
-                             : (
-                    <p>No pictures found.</p>
-                    )}
-                    </div>
-                    </div>
-            ) : <p>Please login
-                </p>
-            }       
-        </div>
-    );
-}
-
-
+                                        </div>);
+                                        }
+                                    )
+                                ) : (
+                                    <p>No images</p>
+                                )
+                            }
+                            </div>
+                       ) : (<p>Please wait...</p>)
+                    }
+                    </div></div>
+                    ) : (
+                    <p>Please log in</p>
+                )}
+                </div>
+);}
+            
 export default MainView

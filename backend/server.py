@@ -96,6 +96,25 @@ def token_required(f):
         return f(user_id, *args, **kwargs)  # välitetään user_id seuraavaan funktioon
     return decorated
 
+@app.route("/deletePic/<int:pic_id>", methods=["DELETE"])
+@token_required
+def delete_pic(user_id, pic_id):
+    conn = connection()
+    cur = conn.cursor()
+
+    # Varmistetaan että kuva kuuluu kyseiselle käyttäjälle
+    cur.execute(
+        "DELETE FROM images WHERE id = %s AND userId = %s RETURNING id",
+        (pic_id, user_id)
+    )
+    deleted = cur.fetchone()
+    conn.commit()
+    conn.close()
+
+    if deleted:
+        return jsonify({"success": True, "message": "Picture deleted", "id": deleted[0]})
+    else:
+        return jsonify({"success": False, "message": "Picture not found or not yours"}), 404
 
     
 @app.route("/deleteme", methods=["GET"])
@@ -181,8 +200,7 @@ def upload_file(user_id):
     )
     conn.commit()
     conn.close()
-
-    return jsonify({'success': True}), 201
+    return jsonify({'success': True, 'description': description, 'file_data': base64.b64encode(binary_data).decode("utf-8")}), 201
 
 
 @app.route("/getUserPics", methods=["GET"])
@@ -196,7 +214,8 @@ def get_user_pics(user_id):
         cur.execute(f"""SELECT * FROM images WHERE userId={user_id}""")
         data = tuple(cur.fetchall())
     except:
-        pass
+        conn.close()
+        return jsonify({'success': False, 'message': 'Error with the database'}), 405
     conn.close()
 
     images = []
@@ -211,10 +230,7 @@ def get_user_pics(user_id):
             "file_data": file_data
         })
 
-    if len(images) > 0:
-        return jsonify(images)
-    else:
-        return jsonify({'success': True})
+    return jsonify(images)
 
 if __name__ == '__main__':
     app.run(debug=False)

@@ -1,11 +1,14 @@
 import { useState, useEffect } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
-import { useSelector } from 'react-redux';
+import { useSelector, useDispatch } from 'react-redux';
 import axios from 'axios';
 
+import { uploadPic } from '../features/pics/picSlice'; // import the thunk
 import Spinner from './Spinner';
 
 function UploadForm() {
+
+    const dispatch = useDispatch();
 
     // initial state of the upload form for file and its description
     const [file, setFile] = useState();
@@ -54,13 +57,10 @@ function UploadForm() {
     const onSubmit = (e) => {
         e.preventDefault()
 
-        
-        
         sendFormData();
 
         setFile(null)
         setDescription('')
-
     }
 
     if (isUploading) {
@@ -72,27 +72,32 @@ function UploadForm() {
         formData.append("file", file);
         formData.append("description", description);
 
-        console.log(file, description);
         const token = localStorage.getItem("token");
-        console.log(token);
   
-    const response = await axios.post(
-  "http://localhost:5000/upload",
-  formData,
-  {
-  headers: {
-    "Authorization": `Bearer ${token}`,
-    "Content-Type": "multipart/form-data"
-  },
-  withCredentials: true
-})
+        const response = await axios.post("http://localhost:5000/upload",
+            formData, {
+                headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data"
+                },
+                withCredentials: true
+            }
+        )
 .then(res => {
+    if (res.data.success) {
+            } else {
+                console.error(response.data.message);
+            }
   console.log("Upload OK:", res.data);
+  
+  dispatch(uploadPic(res.data));
+
 })
 .catch(err => {
   console.error("Upload failed:", err.response?.data || err.message);
 });
-  }
+}
+
 
 return (<>
 <section className='form'>
