@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ToastContainer, toast } from 'react-toastify';
-import { useSelector, useDispatch } from 'react-redux';
+import { useDispatch } from 'react-redux';
 import axios from 'axios';
 
 import { uploadPic } from '../features/pics/picSlice'; // import the thunk
-import Spinner from './Spinner';
+
 
 function UploadForm() {
 
@@ -13,8 +13,6 @@ function UploadForm() {
     // initial state of the upload form for file and its description
     const [file, setFile] = useState();
     const [description, setDescription] = useState('');
-
-    const { isError, message, isUploaded, isUploading } = useSelector((state) => state.pic);
 
     const fileChange = (e) => {
         const file = e.target.files[0];
@@ -45,15 +43,6 @@ function UploadForm() {
 
     }
 
-    // handle possible error in uploading and inform, if upload was successful
-    useEffect(() => {
-    
-        if (isError) toast.error(message)
-
-        if (isUploaded) toast.success('Picture uploaded!')
-    
-    }, [isError, isUploaded, message])
-
     const onSubmit = (e) => {
         e.preventDefault()
 
@@ -61,10 +50,6 @@ function UploadForm() {
 
         setFile(null)
         setDescription('')
-    }
-
-    if (isUploading) {
-        return <Spinner />
     }
 
   const sendFormData = async () => {
@@ -88,7 +73,7 @@ function UploadForm() {
             } else {
                 console.error(response.data.message);
             }
-  console.log("Upload OK:", res.data);
+  // console.log("Upload OK:", res.data);
   
   dispatch(uploadPic(res.data));
 

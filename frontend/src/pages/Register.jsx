@@ -1,7 +1,6 @@
-import { Link, useNavigate } from "react-router";
-import React, { useEffect, useState } from "react";
+import { useNavigate } from "react-router";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { useSelector, useDispatch } from 'react-redux';
 import { ToastContainer, toast } from 'react-toastify';
 
 import { useAuth } from '../AuthContext';
@@ -9,6 +8,7 @@ import { useAuth } from '../AuthContext';
 function Register() {
 
     const navigate = useNavigate();
+    
     const { login } = useAuth();
     const [username, setUsername] = useState("");
     const [password, setPassword] = useState("");
@@ -33,13 +33,13 @@ function Register() {
                     "Content-Type": "application/json"
                 },
                 withCredentials: true});
-
-            console.log(username, password, email);
             
             // Handle successful registration
             // log in after successful registration
 
-            login(username);
+            console.log(response);
+
+            login(username, response.data.token);
 
             navigate('/');
 
@@ -57,6 +57,8 @@ function Register() {
 
   return (
     <div className="page">
+        <ToastContainer />
+
         <h2>Register</h2>
         <div className="login-register">
 

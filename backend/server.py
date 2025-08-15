@@ -70,6 +70,7 @@ def connection():
 #conn.commit()
 #conn.close()
 
+# Magic code, that checks, if the user is logged in
 def token_required(f):
     @wraps(f)
     def decorated(*args, **kwargs):
@@ -117,17 +118,25 @@ def delete_pic(user_id, pic_id):
         return jsonify({"success": False, "message": "Picture not found or not yours"}), 404
 
     
-@app.route("/deleteme", methods=["GET"])
+@app.route("/deleteme", methods=["DELETE"])
 @token_required
 def deleteMe(user_id):
     
     conn = connection()
     cur = conn.cursor()
-    cur.execute(f"DELETE FROM users WHERE (username={user_id})")
-    conn.commit()
-    conn.close()
     
-    return jsonify({'success': True}), 204
+    cur.execute(f"SELECT * FROM images WHERE userid='{user_id}'")
+    imgs = tuple(cur.fetchone())
+    
+    if imgs == None:
+
+        cur.execute(f"DELETE FROM users WHERE username='{user_id}'")
+        conn.commit()
+        conn.close()
+        return jsonify({'success': True}), 204
+    
+    else:
+        return jsonify({'success': False, 'message': 'There are pics by this user'}), 401
 
 @app.route("/register", methods=["POST"])
 def registerUser():
@@ -147,9 +156,13 @@ def registerUser():
     cur = conn.cursor()
     cur.execute(f"INSERT INTO users (username, email, password) VALUES ('{username}', '{email}', '{password}')")
     conn.commit()
+    
+    cur.execute(f"SELECT '{username}' FROM users")
+    user_id = tuple(cur.fetchone())[0]
     conn.close()
     
-    return f"{username} {email} {password}"
+    token = jwt.encode({"userid": user_id}, app.secret_key, algorithm="HS256")
+    return jsonify({'success': True, 'token': token}), 201
 
 @app.route("/login", methods=["POST"])
 def loginUser():
@@ -230,7 +243,7 @@ def get_user_pics(user_id):
             "file_data": file_data
         })
 
-    return jsonify(images)
+        return jsonify(images)
 
 if __name__ == '__main__':
     app.run(debug=False)

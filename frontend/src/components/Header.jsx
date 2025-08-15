@@ -2,6 +2,7 @@ import {FaSignInAlt, FaSignOutAlt, FaUser} from 'react-icons/fa';
 import { useNavigate } from 'react-router';
 import { Link } from 'react-router';
 import axios from 'axios';
+import { ToastContainer, toast } from 'react-toastify';
 
 import { useAuth } from '../AuthContext';
 
@@ -9,22 +10,30 @@ function Header() {
 
   const navigate = useNavigate();
 
-  const { isLoggedIn, logout } = useAuth();
+  const { isLoggedIn, logout, token } = useAuth();
 
   const handleDelete = async () => {
     try {
-        const res = await axios.post('http://localhost:5000/deleteme', {
-          withCredentials: true,
-        });
+        const res = await axios.delete('http://localhost:5000/deleteme', {
+          headers: {
+                    "Authorization": `Bearer ${token}`,
+                    "Content-Type": "multipart/form-data"
+                },
+          withCredentials: true },
+        );
 
-        console.log(res.data); // esim. "User deleted"
-        
-        localStorage.removeItem("username");
-        logout();
+        if (res.data === undefined) {
+          toast("Perhaps the PostgreSQL database isn't running");
+          return;
+        } else {
+          toast(res.data); // esim. "User deleted"
+          logout();
+          navigate('/');
+        }
 
-        navigate('/');
+
     } catch (error) {
-        console.error('Poistaminen epäonnistui:', error);
+        toast("Deleting user failed. Perhaps there exists images by the user.");
       }
 
   }
@@ -56,6 +65,8 @@ function Header() {
           </Link>
          </>) }
           </div>
+
+          <ToastContainer />
           <h1>Image Gallery</h1>
           
     </header>

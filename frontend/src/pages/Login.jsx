@@ -29,16 +29,14 @@ function Login() {
                                 });
 
                 if (response.status === 401) {
-                    throw new Error('Unauthorized: Invalid credentials');
+                    toast('Unauthorized: Invalid credentials');
+                    return;
                 }
 
-                console.log(response);
-
                 // Handle successful login
-                localStorage.setItem('isLoggedIn', 'true');
-                localStorage.setItem('username', username);
-                localStorage.setItem('token', response.data.token);
-
+                // localStorage.setItem('isLoggedIn', 'true');
+                // localStorage.setItem('username', username);
+                // localStorage.setItem('token', response.data.token);
 
                 login(username, response.data.token);
 
@@ -61,7 +59,7 @@ function Login() {
 
     <div data-mdb-input-init className="form-outline mb-4">
         <input type="text" id="username" name="username" value={username} onChange={(e) => setUsername(e.target.value)} required className="form-control" />
-        <label className="form-label" htmlFor="username">Email address</label>
+        <label className="form-label" htmlFor="username">Username</label>
     </div>
 
     <div data-mdb-input-init className="form-outline mb-4">

@@ -28,7 +28,6 @@ const picSlice = createSlice({
     isError: false,
     isLoading: false,
     isSuccess: false,
-    isUploaded: false,
     message: '',
     error: '',
   },
@@ -38,7 +37,6 @@ const picSlice = createSlice({
             state.isLoading = false
             state.isError = false
             state.isSuccess = false
-            state.isUploaded = false
             state.message = ''
         },
           deleteOne: (state, action) => {

@@ -6,6 +6,7 @@ import axios from 'axios';
 import { fetchPics, reset } from '../features/pics/picSlice'; // import the thunk
 import UploadForm from '../components/UploadForm';
 import { useAuth } from '../AuthContext';
+import Spinner from '../components/Spinner';
 
 function MainView() {
 
@@ -27,7 +28,7 @@ function MainView() {
             });
 
             if (response.data.success) {
-                // Poistetaan kuva Reduxin statesta
+                // Remove picture from state of Redux
                 dispatch({
                     type: 'pic/deleteOne',
                     payload: id
@@ -73,8 +74,7 @@ function MainView() {
 
                         {pics.length > 0 ? (
                                 pics.map((picture) => {
-                    
-                                
+                                                    
                                         return (<div className='picture' key={'_'+picture.id}>
                                             <p onClick={(e) => deletePic(e, picture.id)} className='close'>Delete picture</p>
                                             <img src={`data:image/jpeg;base64,${picture.file_data}`} width="350" height="350" alt={`Image: ${picture.fileName}`} />
@@ -87,7 +87,7 @@ function MainView() {
                                 )
                             }
                             </div>
-                       ) : (<p>Please wait...</p>)
+                       ) : (<Spinner />)
                     }
                     </div></div>
                     ) : (
