@@ -4,6 +4,12 @@ A little full-stack image gallery project.
 
 ## How to run?
 
+### Frontend
+
+Go to frontend drawer and do `npm install`.
+
+### Backend
+
 1. Create `.env` to backend drawer:
 
 Put there:
