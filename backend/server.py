@@ -12,13 +12,15 @@ import hashlib
 
 
 app = Flask(__name__)
-# Salli Reactin pyyntö
-CORS(
-    app,
-    supports_credentials=True,
-    resources={r"/*": {"origins": "http://localhost:3000"}},
-    allow_headers=["Content-Type", "Authorization"]
-)
+
+CORS(app,
+     supports_credentials=True)
+#CORS(
+#    app,
+#    supports_credentials=True,
+#    resources={r"/*": {"origins": "http://localhost:3000"}},
+#    allow_headers=["Content-Type", "Authorization"]
+#)
 
 app.secret_key = 'Secret_test_key_for_MY_AND_YOUR_EYES_ONLY'
 app.config['SESSION_TYPE'] = 'filesystem'
@@ -45,23 +47,18 @@ CREATE TABLE users (
 
 load_dotenv()
 
+DATABASE_URL = os.getenv("DATABASE_URL")
+
 def connection():
-    config = {
-          'dbname': os.getenv('DB_NAME'),
-          'user': os.getenv('DB_USER'),
-          'password': os.getenv('DB_PASSWORD'),
-              'host': '127.0.0.1',
-              'port': '5432'
-            }
-        
+    
     try:
-        conn = psycopg2.connect(**config)
+        conn = psycopg2.connect(DATABASE_URL)
+        print("Database connection established")
+        return conn
     except psycopg2.Error as err:
         print(err)
         exit(1)
-    else:
-        print("Database connection established")
-        return conn
+        
 
 #conn = connection()
 #cur = conn.cursor()
@@ -193,6 +190,7 @@ def loginUser():
     try:
         user = tuple(cur.fetchone())
     except:
+        conn.close()
         return make_response('Could not Verify', 401, {'WWW-Authenticate': 'Basic realm ="Login Required"'})
         
     conn.close()
@@ -260,4 +258,4 @@ def get_user_pics(user_id):
     return jsonify(images)
 
 if __name__ == '__main__':
-    app.run(debug=False)
+    app.run(host="0.0.0.0", port=5000, debug=False)
