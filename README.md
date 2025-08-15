@@ -15,10 +15,10 @@ Start the frontend: `npm start`.
 1. Create `.env` to backend drawer:
 
 Put there:
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=secret
-POSTGRES_DB=mydb
-DATABASE_URL=postgresql://postgres:secret@db:5432/mydb
+* POSTGRES_USER=postgres
+* POSTGRES_PASSWORD=secret
+* POSTGRES_DB=mydb
+* DATABASE_URL=postgresql://postgres:secret@db:5432/mydb
 
 where
 
