@@ -28,11 +28,6 @@ function Login() {
                                 password: password
                                 });
 
-                if (response.status === 401) {
-                    toast('Unauthorized: Invalid credentials');
-                    return;
-                }
-
                 // Handle successful login
                 // localStorage.setItem('isLoggedIn', 'true');
                 // localStorage.setItem('username', username);
@@ -42,7 +37,8 @@ function Login() {
 
                 navigate('/');
             } catch (error) {
-                console.error('Login failed:', error.message);
+                console.log("Unauthorized: Invalid credentials.", error.message);
+                toast("Invalid user credentials (probably).");
             }
             };
 

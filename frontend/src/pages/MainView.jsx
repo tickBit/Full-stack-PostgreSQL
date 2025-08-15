@@ -15,7 +15,7 @@ function MainView() {
 
     const { isLoggedIn, username, token } = useAuth();
 
-    const { pics } = useSelector((state) => state.pic);
+    const { pics, isLoading } = useSelector((state) => state.pic);
     
     async function deletePic(e, id) {
         if (!isLoggedIn) return;
@@ -70,7 +70,7 @@ function MainView() {
 
                     <div className='picture-area'>
 
-                    {pics ? (<div>
+                    {!isLoading && pics ? (<div>
 
                         {pics.length > 0 ? (
                                 pics.map((picture) => {
@@ -87,7 +87,7 @@ function MainView() {
                                 )
                             }
                             </div>
-                       ) : (<Spinner />)
+                       ) : (<p>PLease wait...</p>)
                     }
                     </div></div>
                     ) : (

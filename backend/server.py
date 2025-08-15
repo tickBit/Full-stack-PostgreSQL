@@ -126,10 +126,10 @@ def deleteMe(user_id):
     cur = conn.cursor()
     
     cur.execute(f"SELECT * FROM images WHERE userid='{user_id}'")
-    imgs = tuple(cur.fetchone())
-    
-    if imgs == None:
 
+    try:
+        imgs = tuple(cur.fetchone())
+    except:
         cur.execute(f"DELETE FROM users WHERE username='{user_id}'")
         conn.commit()
         conn.close()
@@ -154,15 +154,24 @@ def registerUser():
     
     conn = connection()
     cur = conn.cursor()
-    cur.execute(f"INSERT INTO users (username, email, password) VALUES ('{username}', '{email}', '{password}')")
-    conn.commit()
     
     cur.execute(f"SELECT '{username}' FROM users")
-    user_id = tuple(cur.fetchone())[0]
-    conn.close()
     
-    token = jwt.encode({"userid": user_id}, app.secret_key, algorithm="HS256")
-    return jsonify({'success': True, 'token': token}), 201
+    try:
+        user_id = tuple(cur.fetchone())
+    except:
+        
+        cur.execute(f"INSERT INTO users (username, email, password) VALUES ('{username}', '{email}', '{password}')")
+        conn.commit()
+    
+        cur.execute(f"SELECT '{username}' FROM users")
+        user_id = tuple(cur.fetchone())[0]
+        conn.close()
+    
+        token = jwt.encode({"userid": user_id}, app.secret_key, algorithm="HS256")
+        return jsonify({'success': True, 'token': token}), 201
+
+    return jsonify({'success': False}), 400
 
 @app.route("/login", methods=["POST"])
 def loginUser():
@@ -180,18 +189,16 @@ def loginUser():
     conn = connection()
     cur = conn.cursor()
     cur.execute(f"SELECT * FROM users WHERE username='{username}' AND password='{password}'")
-    user = tuple(cur.fetchone())
-    conn.close()
     
-    #if (username == user[1] and password == user[3]):
-    # 
-    session['loggedin'] = "True"
-    session['username'] = username
+    try:
+        user = tuple(cur.fetchone())
+    except:
+        return make_response('Could not Verify', 401, {'WWW-Authenticate': 'Basic realm ="Login Required"'})
+        
+    conn.close()
         
     token = jwt.encode({"userid": user[0]}, app.secret_key, algorithm="HS256")
     return jsonify({'success': True, 'token': token})
-    
-    #return make_response('Could not Verify', 401, {'WWW-Authenticate': 'Basic realm ="Login Required"'})
 
 @app.route("/upload", methods=["POST"])
 @token_required
@@ -224,13 +231,16 @@ def get_user_pics(user_id):
     cur = conn.cursor()
     
     try:
-        cur.execute(f"""SELECT * FROM images WHERE userId={user_id}""")
-        data = tuple(cur.fetchall())
+        cur.execute(f"""SELECT * FROM images WHERE userId='{user_id}'""")
+        data = cur.fetchall()
     except:
         conn.close()
         return jsonify({'success': False, 'message': 'Error with the database'}), 405
+    
     conn.close()
-
+    
+    print(data)
+    
     images = []
     for row in data:
         img_id = row[0]
@@ -243,7 +253,8 @@ def get_user_pics(user_id):
             "file_data": file_data
         })
 
-        return jsonify(images)
+        
+    return jsonify(images)
 
 if __name__ == '__main__':
     app.run(debug=False)

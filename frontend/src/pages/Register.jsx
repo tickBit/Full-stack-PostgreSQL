@@ -36,17 +36,14 @@ function Register() {
             
             // Handle successful registration
             // log in after successful registration
-
-            console.log(response);
-
             login(username, response.data.token);
 
             navigate('/');
 
         } catch (err) {
-            console.log(username, password, email);
             setError(err.message);
             console.error("Registration error:", err);
+            toast("Registration failed!\nPerhaps a user exists by that username");
         }
     }
 
