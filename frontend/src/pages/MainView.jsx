@@ -28,6 +28,7 @@ function MainView() {
             });
 
             if (response.data.success) {
+                
                 // Remove picture from state of Redux
                 dispatch({
                     type: 'pic/deleteOne',
@@ -87,7 +88,7 @@ function MainView() {
                                 )
                             }
                             </div>
-                       ) : (<p>PLease wait...</p>)
+                       ) : (<Spinner />)
                     }
                     </div></div>
                     ) : (

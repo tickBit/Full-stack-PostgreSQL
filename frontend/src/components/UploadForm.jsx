@@ -4,9 +4,12 @@ import { useDispatch } from 'react-redux';
 import axios from 'axios';
 
 import { uploadPic } from '../features/pics/picSlice'; // import the thunk
+import { useAuth } from '../AuthContext';
 
 
 function UploadForm() {
+
+    const { token } = useAuth();
 
     const dispatch = useDispatch();
 
@@ -56,8 +59,6 @@ function UploadForm() {
         const formData = new FormData();
         formData.append("file", file);
         formData.append("description", description);
-
-        const token = localStorage.getItem("token");
   
         const response = await axios.post("http://localhost:5000/upload",
             formData, {
@@ -73,7 +74,7 @@ function UploadForm() {
             } else {
                 console.error(response.data.message);
             }
-  // console.log("Upload OK:", res.data);
+  console.log("Upload OK:", res.data);
   
   dispatch(uploadPic(res.data));
 

@@ -215,12 +215,17 @@ def upload_file(user_id):
     cur = conn.cursor()
     cur.execute(
         """INSERT INTO images (userId, description, file_data)
-           VALUES (%s, %s, %s)""",
+           VALUES (%s, %s, %s) RETURNING id""",
         (user_id, description, psycopg2.Binary(binary_data))
     )
     conn.commit()
+    
+    # get the ID of just created record
+    id = cur.fetchone()[0]
+    
     conn.close()
-    return jsonify({'success': True, 'description': description, 'file_data': base64.b64encode(binary_data).decode("utf-8")}), 201
+    
+    return jsonify({'success': True, 'id': id, 'description': description, 'file_data': base64.b64encode(binary_data).decode("utf-8")}), 201
 
 
 @app.route("/getUserPics", methods=["GET"])
@@ -238,9 +243,7 @@ def get_user_pics(user_id):
         return jsonify({'success': False, 'message': 'Error with the database'}), 405
     
     conn.close()
-    
-    print(data)
-    
+        
     images = []
     for row in data:
         img_id = row[0]
