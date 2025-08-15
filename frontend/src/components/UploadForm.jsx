@@ -38,7 +38,7 @@ function UploadForm() {
         
         // limit description length to 180 chars
         if (e.target.value.length > 180) {
-            toast("Too long description")
+            toast("Too long description");
             return;
         }
 
@@ -47,12 +47,12 @@ function UploadForm() {
     }
 
     const onSubmit = (e) => {
-        e.preventDefault()
+        e.preventDefault();
 
         sendFormData();
 
-        setFile(null)
-        setDescription('')
+        setFile(null);
+        setDescription('');
     }
 
   const sendFormData = async () => {
@@ -74,7 +74,6 @@ function UploadForm() {
             } else {
                 console.error(response.data.message);
             }
-  console.log("Upload OK:", res.data);
   
   dispatch(uploadPic(res.data));
 

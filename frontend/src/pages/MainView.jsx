@@ -7,6 +7,7 @@ import { fetchPics, reset } from '../features/pics/picSlice'; // import the thun
 import UploadForm from '../components/UploadForm';
 import { useAuth } from '../AuthContext';
 import Spinner from '../components/Spinner';
+import PleaseLogin from '../components/PleaseLogin';
 
 function MainView() {
 
@@ -28,7 +29,7 @@ function MainView() {
             });
 
             if (response.data.success) {
-                
+
                 // Remove picture from state of Redux
                 dispatch({
                     type: 'pic/deleteOne',
@@ -62,9 +63,8 @@ function MainView() {
 
     return (
         <div className="page">
-            
             {isLoggedIn ? (
-                <div>
+               <div>
                     <h2>Main page for user {username}</h2>
 
                     <UploadForm />
@@ -91,10 +91,12 @@ function MainView() {
                        ) : (<Spinner />)
                     }
                     </div></div>
-                    ) : (
-                    <p>Please log in</p>
-                )}
-                </div>
-);}
+                    ) : (<PleaseLogin />)}
+                    </div>
+            
+            
+        );}
+               
+
             
 export default MainView

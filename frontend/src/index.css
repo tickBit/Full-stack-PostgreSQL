@@ -137,3 +137,8 @@ span { margin-left:2em }
     transform: rotate(360deg);
   }
 }
+
+#please {
+  margin: 7em;
+  text-align: center;
+}
