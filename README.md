@@ -8,6 +8,8 @@ A little full-stack image gallery project.
 
 Go to frontend drawer and do `npm install`.
 
+Start the frontend: `npm start`.
+
 ### Backend
 
 1. Create `.env` to backend drawer:
@@ -31,3 +33,4 @@ docker-compose up --build
 3. Backend servers at address http://localhost:5000
 
 Please notice, that you need Docker to run this.
+
