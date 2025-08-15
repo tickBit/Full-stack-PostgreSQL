@@ -34,3 +34,8 @@ docker-compose up --build
 
 Please notice, that you need Docker to run this.
 
+#### Picture of the app running
+
+![PostgreSQL-database](https://github.com/user-attachments/assets/6ed4c8f1-dfe0-4ddb-910e-09cce7bd74f5)
+
+
