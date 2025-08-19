@@ -22,7 +22,7 @@ Put there:
 
 where
 
-- `postgres` is the _your_ username for PostgreSQL database
+- `postgres` is _your_ username for PostgreSQL database
 - `secret` _your_ password for the database
 - `mydb` _your_ database name
 
