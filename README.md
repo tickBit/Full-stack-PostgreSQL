@@ -30,7 +30,7 @@ where
 
 docker-compose up --build
 
-3. Backend servers at address http://localhost:5000
+3. Backend serves at address http://localhost:5000
 
 Please notice, that you need Docker to run this.
 
