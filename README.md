@@ -25,7 +25,8 @@ where
 - `postgres` is _your_ username for PostgreSQL database
 - `secret` _your_ password for the database
 - `mydb` _your_ database name
-
+- `secret` and `mydb` are also in the DATABASE_URL
+  
 2. Start the containers
 
 docker-compose up --build
